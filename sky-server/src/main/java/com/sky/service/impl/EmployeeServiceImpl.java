@@ -78,7 +78,6 @@ public class EmployeeServiceImpl implements EmployeeService  {
         String password=DigestUtils.md5DigestAsHex(PasswordConstant.DEFAULT_PASSWORD.getBytes());
         employee.setPassword(password);
 
-        //TODO 设置记录创建人和修改人ID 需要完善 目前写死
         employee.setCreateUser(BaseContext.getCurrentId());
         employee.setUpdateUser(BaseContext.getCurrentId());
 
