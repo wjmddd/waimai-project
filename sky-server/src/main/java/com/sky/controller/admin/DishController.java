@@ -11,10 +11,12 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import javax.websocket.server.PathParam;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/admin/dish")
@@ -23,11 +25,23 @@ import java.util.List;
 public class DishController {
     @Autowired
     private DishService dishService;
+    @Autowired
+    private RedisTemplate redisTemplate;
+
+
+    private void cleanCache(String pattern){
+        Set keys = redisTemplate.keys(pattern);
+        redisTemplate.delete(keys);
+    }
     @PostMapping
     @ApiOperation("新增菜品")
     public Result save(@RequestBody DishDTO dto){
         log.info("新增菜品");
         dishService.saveWithFlavor(dto);
+        //清理缓存数据
+        String key="dish_"+dto.getCategoryId();
+        cleanCache(key);
+
         return Result.success();
     }
 
@@ -44,6 +58,8 @@ public class DishController {
     public Result delete(@RequestParam List<Long> ids){
         log.info("删除菜品：{}", ids);
         dishService.deleteBatch(ids);
+        //删除所有菜品缓存数据
+        cleanCache("dish_*");
         return Result.success();
     }
 
@@ -60,6 +76,8 @@ public class DishController {
     public Result update(@RequestBody DishDTO dishDTO){
         log.info("修改菜品:{}",dishDTO);
         dishService.updateWithFlavor(dishDTO);
+        //删除所有菜品缓存数据
+        cleanCache("dish_*");
         return Result.success();
     }
 
@@ -69,4 +87,15 @@ public class DishController {
         List<Dish> list = dishService.list(categoryId);
         return Result.success(list);
     }
+
+    @PostMapping("/status/{status}")
+    @ApiOperation("修改菜品状态")
+    public Result startOrStop(@PathVariable Integer status, Long id){
+        dishService.startOrStop(status, id);
+        //删除所有菜品缓存数据
+        cleanCache("dish_*");
+        return Result.success();
+    }
+
+
 }

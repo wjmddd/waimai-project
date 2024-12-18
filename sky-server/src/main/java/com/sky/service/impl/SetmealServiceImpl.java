@@ -99,7 +99,7 @@ public class SetmealServiceImpl implements SetmealService {
 
     @Override
     public void startOrStop(Integer status, Long id) {
-        //起售套餐时，判断里是否有tingshoucaipin
+        //起售套餐时，判断里是否有停售菜品
         if(status==StatusConstant.ENABLE){
             List<Dish> dishList=dishMapper.getBySetmealId(id);
             if(!dishList.isEmpty() && dishList!=null){
